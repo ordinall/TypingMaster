@@ -5,12 +5,12 @@
         "name": "(msvc) Launch",
         "type": "cppvsdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/program.exe",
+        "program": "program.exe",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],
-        "externalConsole": false
+        "externalConsole": true
       }
     ]
   }

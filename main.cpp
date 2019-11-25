@@ -38,7 +38,7 @@ int main(){
     //wattron(hello,COLOR_PAIR(1));
     box(hello,0,0);
     box(stdscr,0,0);
-    mvwprintw(hello,'1','1',"FUCK YOU");
+    mvwprintw(hello,'1','1'," ");
     refresh();
     wrefresh(hello);
     while(1){

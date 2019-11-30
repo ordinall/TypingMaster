@@ -4,7 +4,7 @@ A project for first my semester at NUCES FAST KHI campus.
  - [x] Initialize Git repo
  - [x] Make basic window moving functions
  - [ ] Profile system
- - [ ] Random Word System
+ - [x] Random Word System
  - [ ] Typing Speed Assessment
  - [ ] Fast Typing Course
 

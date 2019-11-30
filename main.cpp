@@ -66,7 +66,7 @@ WINDOW *create_newwin(int h, int w, int y, int x,int i){
 int main(){
     srand(time(NULL));
     while(1){
-        FILE * fp = fopen("diffi.txt","r");
+        FILE * fp = fopen("glo.txt","r");
         Sleep(100);
         char * haha=getword(fp);
         printf("%s\n",haha);

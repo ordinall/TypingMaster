@@ -1,3 +1,4 @@
 *.pdb
 *.ilk
 *.obj
+profile.dat

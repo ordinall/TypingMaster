@@ -68,20 +68,20 @@ void stringhcentre(int y,int x, char * tempword){
 
 
 void delprofile(char *filename, int recnum) {
-	FILE *fp = fopen(filename, "r+");
-	FILE *ftemp=fopen("tempo", "w+");
-	struct player temp;
-	for(int i=0;fread(&temp,sizeof(struct player),1,fp) != NULL;i++) {
+    FILE *fp = fopen(filename, "r+");
+    FILE *ftemp=fopen("tempo", "w+");
+    struct player temp;
+    for(int i=0;fread(&temp,sizeof(struct player),1,fp) != NULL;i++) {
 		if(i == recnum){
         }
 	    else {
 			fwrite(&temp, sizeof(struct player), 1, ftemp);
 		}
-	}
-	fclose(fp);
-	fclose(ftemp);
-	remove(filename);
-	rename("tempo", filename);
+    }
+    fclose(fp);
+    fclose(ftemp);
+    remove(filename);
+    rename("tempo", filename);
     FILE * profile = fopen("profile.dat","r+");
     profiles(profile);
 }

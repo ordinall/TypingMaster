@@ -49,10 +49,10 @@ char * getword(FILE * fp){
 
 
 void destroy_win(WINDOW *wind){
-	wborder(wind, ' ', ' ', ' ',' ',' ',' ',' ',' ');
+    wborder(wind, ' ', ' ', ' ',' ',' ',' ',' ',' ');
     wclear(wind);
-	wrefresh(wind);
-	delwin(wind);
+    wrefresh(wind);
+    delwin(wind);
 }
 
 

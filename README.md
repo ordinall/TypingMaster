@@ -5,6 +5,6 @@ A project for first my semester at NUCES FAST KHI campus.
  - [x] Make basic window moving functions
  - [x] Profile system
  - [x] Random Word System
- - [ ] Typing Speed Assessment
+ - [x] Typing Speed Assessment
  - [ ] Fast Typing Course
 

@@ -9,28 +9,35 @@
 #include "include/curses.h"
 
 int wordcountfile = -1;
+FILE *wordp;
+
 void profiles(FILE *profile);
+void menu(FILE *profile);
 
 struct player {
     char name[40];
-    int wpm = 0;
+    float wpm = 0;
     int score = 0;
 } play;
 
-char *getword(FILE *fp) {
-    fseek(fp, 0, SEEK_SET);
+void writeready(FILE **profile) {
+    fseek(*profile, -(sizeof(struct player)), SEEK_CUR);
+}
+
+char *getword() {
+    fseek(wordp, 0, SEEK_SET);
     char *ch = (char *)malloc(100);
     int temp = 1;
     if (wordcountfile == -1) {
         while (temp != EOF) {
-            temp = fscanf(fp, "%s", ch);
+            temp = fscanf(wordp, "%s", ch);
             wordcountfile++;
         }
     }
-    fseek(fp, 0, SEEK_SET);
+    fseek(wordp, 0, SEEK_SET);
     int ran = rand() % (wordcountfile);
     for (int j = 1; j <= ran; j++) {
-        fscanf(fp, "%s", ch);
+        fscanf(wordp, "%s", ch);
     }
     return ch;
 }
@@ -64,6 +71,10 @@ void delprofile(char *filename, int recnum) {
     profiles(profile);
 }
 
+void updateprofile(FILE **profile) {
+    fwrite(&play, sizeof(struct player), 1, *profile);
+}
+
 void createprofile(FILE *profile) {
     struct player temp;
     box(stdscr, 0, 0);
@@ -84,7 +95,128 @@ void createprofile(FILE *profile) {
     profiles(profile);
 }
 
+void assess(FILE *profile) {
+    int typingx, typingy;
+    int numword = 6;
+    system("cls");
+    for (int i = 0; i < 3; i++) {
+        system("color F0");
+        Sleep(150);
+        system("color 0F");
+        Sleep(150);
+    }
+    system("color F0");
+    initscr();
+    mvprintw(2, COLS / 2 - 8, "Speed Assessment      Your Highest wpm:%f", play.wpm);
+    refresh();
+    move(4, 1);
+    for (int i = 0; i < numword; i++) {
+        printw("%s ", getword());
+        getyx(stdscr, typingy, typingx);
+        if (typingx > COLS - 20) {
+            typingy++;
+            move(typingy, 1);
+        }
+        Sleep(30);
+        refresh();
+    }
+    typingy = typingy + 4;
+    move(typingy, 1);
+    printw("Type all these words and press Enter after doing so, Dont cheat :)");
+    move(typingy + 1, 1);
+    refresh();
+    unsigned int starttime = GetTickCount();
+    int spacecount = 0;
+    char ch = 'a';
+    while (ch != '\n') {
+        ch = getch();
+        getyx(stdscr, typingy, typingx);
+        if (typingx > COLS - 20) {
+            typingy++;
+            move(typingy, 1);
+        }
+        if (ch == ' ') {
+            spacecount++;
+        }
+    }
+    unsigned int endtime = GetTickCount();
+    if (spacecount != numword - 1) {
+        clear();
+        move(LINES / 2 - 1, COLS / 2 - 5);
+        printw("You cheated :(");
+        refresh();
+        Sleep(5000);
+        endwin();
+        system("color 0F");
+        initscr();
+        noecho();
+        curs_set(0);
+        menu(profile);
+    } else {
+        int dur = endtime - starttime;
+        float sec = dur / 1000;
+        float minute = sec / 60;
+        float wpm = numword / minute;
+        clear();
+
+        if (play.wpm < wpm) {
+            stringhcentre(LINES / 2 - 2, COLS / 2, "Congrats, You broke your highscore");
+            play.wpm = wpm;
+            writeready(&profile);
+            updateprofile(&profile);
+        }
+        move(LINES / 2 - 1, COLS / 2 - 8);
+        printw("Your Wpm = %.2f", wpm);
+        refresh();
+    }
+    Sleep(5000);
+    endwin();
+    system("color 0F");
+    initscr();
+    noecho();
+    curs_set(0);
+    menu(profile);
+}
+
+void menu(FILE *profile) {
+    clear();
+    box(stdscr, 0, 0);
+    refresh();
+    stringhcentre(LINES / 2 - 5, COLS / 2 - 2, "SELECT A MODE");
+    stringhcentre(LINES / 2 - 4, COLS / 2 - 2, "press q to quit");
+    int arr[2][2] = {{LINES / 2 - 1, COLS / 2 - 7},
+                     {LINES / 2 + 1, COLS / 2 - 7}};
+    mvprintw(arr[0][0], arr[0][1], "Typing course");
+    mvprintw(arr[1][0], arr[0][1], "Assessment");
+    mvprintw(arr[0][0], arr[0][1] - 1, ">");
+    int ch = 'a';
+    int select = 0;
+    keypad(stdscr, TRUE);
+    while ((ch = getch()) != '\n') {
+        if (ch == KEY_UP || ch == KEY_DOWN) {
+            mvprintw(arr[select][0], arr[0][1] - 1, " ");
+            select = !select;
+            mvprintw(arr[select][0], arr[0][1] - 1, ">");
+            refresh();
+        }
+        if (ch == 'q' || ch == 'Q') {
+            endwin();
+            exit(0);
+        }
+    }
+    if (select) {
+        keypad(stdscr, FALSE);
+        clear();
+        endwin();
+        assess(profile);
+    } else {
+        keypad(stdscr, FALSE);
+        /////////////////////////////////////////////////////////////////////////////////////////to be continued
+    }
+}
+
 void profiles(FILE *profile) {
+    clear();
     stringhcentre(2, COLS / 2, "PROFILES");
     stringhcentre(3, COLS / 2, "press DEL key to delete a profile");
     WINDOW *prowin = newwin(LINES - 10, COLS / 2 - 10, 5, COLS / 2 - 24);
@@ -107,8 +239,9 @@ void profiles(FILE *profile) {
     wrefresh(prowin);
     refresh();
     if (totallist > 14) {
-        wprintw(prowin, "\rPROFILE LIMIT EXCEEDED, DELETE A PROFILE");
+        stringhcentre(LINES - 4, COLS / 2, "PROFILE LIMIT EXCEEDED, DELETE A PROFILE");
         wrefresh(prowin);
+        refresh();
     }
     int select = 0;
     keypad(stdscr, TRUE);
@@ -132,13 +265,24 @@ void profiles(FILE *profile) {
                 break;
             case '\n':
                 if (select == totallist) {
-                    delwin(prowin);
+                    destroy_win(prowin);
                     keypad(stdscr, FALSE);
                     createprofile(profile);
+                } else {
+                    keypad(stdscr, FALSE);
+                    clear();
+                    destroy_win(prowin);
+                    refresh();
+                    fseek(profile, 0, SEEK_SET);
+                    for (int k = 0; k <= select; k++) {
+                        fread(&play, sizeof(struct player), 1, profile);
+                    }
+                    menu(profile);
+                    exit(0);
                 }
                 break;
             case KEY_DC:
-                delwin(prowin);
+                destroy_win(prowin);
                 keypad(stdscr, FALSE);
                 fclose(profile);
                 delprofile("profile.dat", select);
@@ -152,7 +296,7 @@ void profiles(FILE *profile) {
 
 int main() {
     srand(time(NULL));
-    FILE *wordp = fopen("glo.txt", "r");
+    wordp = fopen("glo.txt", "r");
     initscr();
     noecho();
     curs_set(0);
@@ -175,11 +319,3 @@ int main() {
     profiles(profile);
     endwin();
 }
-/*
-        ch = getch();
-        getbegyx(hello,wy,wx);
-        if(wy == 1){
-            wy++;
-        }
-        
-*/

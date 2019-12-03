@@ -43,10 +43,17 @@ char *getword() {
 }
 
 void destroy_win(WINDOW *wind) {
-    wborder(wind, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
     wclear(wind);
     wrefresh(wind);
     delwin(wind);
+}
+
+WINDOW *create_newwin(int h, int w, int starty, int startx, char *string) {
+    WINDOW *tempwin;
+    tempwin = newwin(h, w, starty, startx);
+    mvwprintw(tempwin, 0, 0, string);
+    wrefresh(tempwin);
+    return tempwin;
 }
 
 void stringhcentre(int y, int x, char *tempword) {
@@ -74,42 +81,226 @@ void delprofile(char *filename, int recnum) {
 void updateprofile(FILE **profile) {
     fwrite(&play, sizeof(struct player), 1, *profile);
 }
+void waitenter() {
+    char a = 'a';
+    while (a != '\n') {
+        a = getch();
+    }
+}
 
 void createprofile(FILE *profile) {
     struct player temp;
     box(stdscr, 0, 0);
     fseek(profile, 0, SEEK_END);
     stringhcentre(LINES / 2, COLS / 2 - 10, "Enter name:");
-    echo();
+    noecho();
+    curs_set(1);
     refresh();
-    char a;
     int i = 0;
-    for (; !(((a = getch()) == '\n') || i >= 38); i++) {
-        temp.name[i] = a;
+    keypad(stdscr, TRUE);
+    int ch = 'a';
+    int cury, curx;
+    for (; !(((ch = getch()) == '\n') || i >= 38); i++) {
+        getyx(stdscr, cury, curx);
+        if (ch == 8) {
+            mvprintw(cury, curx - 1, " ");
+            move(cury, curx - 1);
+        } else {
+            temp.name[i] = ch;
+            printw("%c", ch);
+            refresh();
+        }
     }
     temp.name[i] = '\0';
-    noecho();
+    curs_set(0);
     fwrite(&temp, sizeof(struct player), 1, profile);
     clear();
     refresh();
     profiles(profile);
 }
 
-void assess(FILE *profile) {
+void course(FILE *profile) {
+    srand(time(NULL));
     int typingx, typingy;
-    int numword = 6;
+    int numword = 20;
     system("cls");
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 2; i++) {
         system("color F0");
-        Sleep(150);
+        Sleep(8);
         system("color 0F");
-        Sleep(150);
+        Sleep(80);
     }
     system("color F0");
     initscr();
-    mvprintw(2, COLS / 2 - 8, "Speed Assessment      Your Highest wpm:%f", play.wpm);
+    curs_set(0);
+    noecho();
+    nodelay(stdscr, TRUE);
+    int health = 7;
+    int score = 0;
+    mvprintw(2, COLS / 2 - 11, "Fast Typing Course       Your Highscore:%d", play.score);
+    stringhcentre(5, COLS / 2, "Type the words appearing on the screen, type the bottom most word first");
+    stringhcentre(6, COLS / 2, "Dont correct and worry about typing mistakes");
+    stringhcentre(7, COLS / 2, "Press Enter to Start");
+    mvprintw(LINES - 3, COLS / 2 - 5, "Health: %d", health);
+    mvprintw(LINES - 2, COLS / 2 - 5, "Score: %d", score);
     refresh();
-    move(4, 1);
+    refresh();
+    Beep(1600, 150);
+    Beep(1500, 150);
+    Beep(1000, 250);
+    waitenter();
+    int starty = 8;
+    int spawnpos = COLS / 8;
+    int endy = LINES - 4;
+    WINDOW *win[3];
+    char words[3][21];
+    strcpy(words[0], getword());
+    strcpy(words[1], getword());
+    strcpy(words[2], getword());
+    win[0] = create_newwin(1, 20, starty + 1, spawnpos * 2, words[0]);
+    win[1] = create_newwin(1, 20, starty + 2, spawnpos * 4, words[1]);
+    win[2] = create_newwin(1, 20, starty + 3, spawnpos * 6, words[2]);
+    stringhcentre(7, COLS / 2, "                      ");
+    mvhline(endy, 0, ACS_HLINE, COLS);
+    refresh();
+    char ch;
+    int charcount = 0;
+    int speed = 10;
+    for (long long int p = 0;; p++) {
+        mvprintw(LINES - 3, COLS / 2 - 5, "Health: %d", health);
+        mvprintw(LINES - 2, COLS / 2 - 5, "Score: %d", score);
+        refresh();
+        int winx, winy;
+        if (p == 100)
+            speed = 7;
+        if (p == 300)
+            speed = 5;
+        if (p % speed == 0) {
+            for (int i = 0; i < 3; i++) {
+                getbegyx(win[i], winy, winx);
+                if (winy == endy - 1) {
+                    wclear(win[i]);
+                    wrefresh(win[i]);
+                    delwin(win[i]);
+                    strcpy(words[i], getword());
+                    create_newwin(1, 20, starty + 1, spawnpos * ((i + 1) * 2), words[i]);
+                    health--;
+                    charcount = 0;
+                } else {
+                    wclear(win[i]);
+                    wrefresh(win[i]);
+                    delwin(win[i]);
+                    create_newwin(1, 20, winy + 1, winx, words[i]);
+                }
+            }
+        }
+        if (health == 0) {
+            clear();
+            stringhcentre(LINES / 2 - 3, COLS / 2, "GAME OVER!");
+            if (play.score < score) {
+                stringhcentre(LINES / 2 - 2, COLS / 2, "Congrats, You broke your highscore");
+                play.score = score;
+                writeready(&profile);
+                updateprofile(&profile);
+            }
+            move(LINES / 2 - 1, COLS / 2 - 8);
+            printw("Your Score = %d", score);
+            Beep(1000, 120);
+            Beep(1500, 150);
+            Beep(2000, 500);
+            refresh();
+            stringhcentre(LINES / 2, COLS / 2, "Press enter to continue");
+            refresh();
+            waitenter();
+            endwin();
+            system("cls");
+            for (int i = 0; i < 2; i++) {
+                system("color 0F");
+                Sleep(8);
+                system("color F0");
+                Sleep(80);
+            }
+            system("color 0F");
+            initscr();
+            noecho();
+            curs_set(0);
+            menu(profile);
+        }
+        ch = getch();
+        if (ch != ERR) {
+            int max = -1;
+            int maxwin;
+            for (int i = 0; i < 3; i++) {
+                int x, y;
+                getbegyx(win[i], y, x);
+                if (y > max) {
+                    max = y;
+                    maxwin = i;
+                }
+            }
+            if (ch == words[maxwin][charcount]) {
+                words[maxwin][charcount] = ' ';
+                charcount++;
+                score += 10;
+                int flag = 0;
+                for (int l = 0; words[maxwin][l] != '\0'; l++) {
+                    if (words[maxwin][l] != ' ') {
+                        flag = 1;
+                    }
+                }
+                if (flag == 1) {
+                    int rey, rex;
+                    getbegyx(win[maxwin], rey, rex);
+                    wclear(win[maxwin]);
+                    wrefresh(win[maxwin]);
+                    delwin(win[maxwin]);
+                    create_newwin(1, 20, rey, rex, words[maxwin]);
+                    wrefresh(win[maxwin]);
+                    refresh();
+                } else {
+                    wclear(win[maxwin]);
+                    wrefresh(win[maxwin]);
+                    delwin(win[maxwin]);
+                    strcpy(words[maxwin], getword());
+                    create_newwin(1, 20, starty + 1, spawnpos * ((maxwin + 1) * 2), words[maxwin]);
+                    charcount = 0;
+                }
+            }
+        }
+        for (int i = 0; i < 3; i++) {
+            wrefresh(win[i]);
+            refresh();
+        }
+
+        Sleep(50);
+    }
+}
+
+void assess(FILE *profile) {
+    int typingx, typingy;
+    int numword = 20;
+    system("cls");
+    for (int i = 0; i < 2; i++) {
+        system("color F0");
+        Sleep(8);
+        system("color 0F");
+        Sleep(80);
+    }
+    system("color F0");
+    initscr();
+    noecho();
+    cbreak();
+    mvprintw(2, COLS / 2 - 11, "Speed Assessment       Your Highest wpm:%.2f", play.wpm);
+    stringhcentre(5, COLS / 2, "Type the words and press Enter after typing all, Dont cheat :)");
+    stringhcentre(6, COLS / 2, "Dont correct and worry about typing mistakes");
+    stringhcentre(7, COLS / 2, "Press Enter to Start");
+    refresh();
+    Beep(2000, 150);
+    Beep(1500, 150);
+    Beep(1000, 500);
+    waitenter();
+    stringhcentre(7, COLS / 2, "                      ");
+    move(9, 1);
     for (int i = 0; i < numword; i++) {
         printw("%s ", getword());
         getyx(stdscr, typingy, typingx);
@@ -122,38 +313,54 @@ void assess(FILE *profile) {
     }
     typingy = typingy + 4;
     move(typingy, 1);
-    printw("Type all these words and press Enter after doing so, Dont cheat :)");
+    printw("TYPE:");
     move(typingy + 1, 1);
     refresh();
     unsigned int starttime = GetTickCount();
     int spacecount = 0;
-    char ch = 'a';
+    keypad(stdscr, TRUE);
+    int ch = 'a';
     while (ch != '\n') {
         ch = getch();
         getyx(stdscr, typingy, typingx);
-        if (typingx > COLS - 20) {
-            typingy++;
-            move(typingy, 1);
+        if (ch == 8) {
+            mvprintw(typingy, typingx - 1, " ");
+            move(typingy, typingx - 1);
+        } else {
+            if (typingx > COLS - 20) {
+                typingy++;
+                move(typingy, 1);
+            }
+            if (ch == ' ') {
+                spacecount++;
+            }
+            printw("%c", ch);
         }
-        if (ch == ' ') {
-            spacecount++;
-        }
-    }
-    unsigned int endtime = GetTickCount();
-    if (spacecount != numword - 1) {
-        clear();
-        move(LINES / 2 - 1, COLS / 2 - 5);
-        printw("You cheated :(");
         refresh();
-        Sleep(5000);
+    }
+    keypad(stdscr, TRUE);
+    unsigned int endtime = GetTickCount();
+    if (!(spacecount > numword - 7 && spacecount < numword + 7)) {
+        clear();
+        Beep(1300, 100);
+        stringhcentre(LINES / 2 - 1, COLS / 2, "Try that again, sorry");
+        stringhcentre(LINES / 2, COLS / 2, "Press enter to continue");
+        refresh();
+        waitenter();
         endwin();
+        for (int i = 0; i < 2; i++) {
+            system("color 0F");
+            Sleep(8);
+            system("color F0");
+            Sleep(80);
+        }
         system("color 0F");
         initscr();
         noecho();
         curs_set(0);
         menu(profile);
     } else {
-        int dur = endtime - starttime;
+        float dur = endtime - starttime;
         float sec = dur / 1000;
         float minute = sec / 60;
         float wpm = numword / minute;
@@ -167,10 +374,21 @@ void assess(FILE *profile) {
         }
         move(LINES / 2 - 1, COLS / 2 - 8);
         printw("Your Wpm = %.2f", wpm);
+        Beep(1000, 120);
+        Beep(1500, 150);
+        Beep(2000, 500);
         refresh();
     }
-    Sleep(5000);
+    stringhcentre(LINES / 2, COLS / 2, "Press enter to continue");
+    refresh();
+    waitenter();
     endwin();
+    for (int i = 0; i < 2; i++) {
+        system("color 0F");
+        Sleep(8);
+        system("color F0");
+        Sleep(80);
+    }
     system("color 0F");
     initscr();
     noecho();
@@ -211,7 +429,9 @@ void menu(FILE *profile) {
         assess(profile);
     } else {
         keypad(stdscr, FALSE);
-        /////////////////////////////////////////////////////////////////////////////////////////to be continued
+        clear();
+        endwin();
+        course(profile);
     }
 }
 

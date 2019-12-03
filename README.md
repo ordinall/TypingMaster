@@ -6,5 +6,6 @@ A project for first my semester at NUCES FAST KHI campus.
  - [x] Profile system
  - [x] Random Word System
  - [x] Typing Speed Assessment
- - [ ] Fast Typing Course
+ - [x] Fast Typing Course
+ - [x] (extra) beep sounds :)
 

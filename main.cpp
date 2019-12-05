@@ -158,23 +158,23 @@ void course(FILE *profile) {
     strcpy(words[1], getword());
     strcpy(words[2], getword());
     win[0] = create_newwin(1, 20, starty + 1, spawnpos * 2, words[0]);
-    win[1] = create_newwin(1, 20, starty + 2, spawnpos * 4, words[1]);
-    win[2] = create_newwin(1, 20, starty + 3, spawnpos * 6, words[2]);
+    win[1] = create_newwin(1, 20, starty + 3, spawnpos * 4, words[1]);
+    win[2] = create_newwin(1, 20, starty + 5, spawnpos * 6, words[2]);
     stringhcentre(7, COLS / 2, "                      ");
     mvhline(endy, 0, ACS_HLINE, COLS);
     refresh();
     char ch;
     int charcount = 0;
-    int speed = 10;
+    int speed = 11;
     for (long long int p = 0;; p++) {
         mvprintw(LINES - 3, COLS / 2 - 5, "Health: %d", health);
         mvprintw(LINES - 2, COLS / 2 - 5, "Score: %d", score);
         refresh();
         int winx, winy;
         if (p == 100)
-            speed = 7;
-        if (p == 300)
-            speed = 5;
+            speed = 9;
+        if (p == 1000)
+            speed = 6;
         if (p % speed == 0) {
             for (int i = 0; i < 3; i++) {
                 getbegyx(win[i], winy, winx);
@@ -184,6 +184,7 @@ void course(FILE *profile) {
                     delwin(win[i]);
                     strcpy(words[i], getword());
                     create_newwin(1, 20, starty + 1, spawnpos * ((i + 1) * 2), words[i]);
+                    Beep(600,500);
                     health--;
                     charcount = 0;
                 } else {
@@ -262,6 +263,7 @@ void course(FILE *profile) {
                     wrefresh(win[maxwin]);
                     delwin(win[maxwin]);
                     strcpy(words[maxwin], getword());
+                    Beep(4000,50);
                     create_newwin(1, 20, starty + 1, spawnpos * ((maxwin + 1) * 2), words[maxwin]);
                     charcount = 0;
                 }

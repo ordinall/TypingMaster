@@ -139,7 +139,6 @@ void course(FILE *profile) {
     int score = 0;
     mvprintw(2, COLS / 2 - 11, "Fast Typing Course       Your Highscore:%d", play.score);
     stringhcentre(5, COLS / 2, "Type the words appearing on the screen, type the bottom most word first");
-    stringhcentre(6, COLS / 2, "Dont correct and worry about typing mistakes");
     stringhcentre(7, COLS / 2, "Press Enter to Start");
     mvprintw(LINES - 3, COLS / 2 - 5, "Health: %d", health);
     mvprintw(LINES - 2, COLS / 2 - 5, "Score: %d", score);
@@ -160,7 +159,7 @@ void course(FILE *profile) {
     win[0] = create_newwin(1, 20, starty + 1, spawnpos * 2, words[0]);
     win[1] = create_newwin(1, 20, starty + 3, spawnpos * 4, words[1]);
     win[2] = create_newwin(1, 20, starty + 5, spawnpos * 6, words[2]);
-    stringhcentre(7, COLS / 2, "                      ");
+    stringhcentre(7, COLS / 2, "                                                                              ");
     mvhline(endy, 0, ACS_HLINE, COLS);
     refresh();
     char ch;

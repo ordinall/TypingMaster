@@ -1,13 +1,8 @@
 # The Typing Master
-A project for first my semester at NUCES FAST KHI campus.
+A project for my first semester at NUCES FAST KHI campus.
 
 ### Build Download:
-Download the files: 
-+ glo.txt
-+ pdcurses.dll
-+ program.exe
-
-Run program.exe, make sure that all these files are in the same directory.
+Look in  the release section.
 
 ### Objectives
  - [x] Initialize Git repo
